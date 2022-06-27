@@ -17,5 +17,9 @@
 		<input type="password" name="pass" placeholder="Пароль">
 		<input type="submit" name="" value="Зарегистрироваться">
 	</form>
+
+    <?php
+    if (isset($_SESSION['auth'])) session_destroy();
+    ?>
 </body>
 </html>

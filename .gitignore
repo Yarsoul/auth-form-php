@@ -1,1 +1,3 @@
 .vscode/
+.idea/
+php_errors.log

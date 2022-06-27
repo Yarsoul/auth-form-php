@@ -2,6 +2,7 @@
 	include "connection.php";
 
 	session_start();
+    $_SESSION['status'] = 3;
 
 	function generate_salt()
 	{
@@ -15,30 +16,43 @@
 
 
 	if (($_POST['login'] != '') && ($_POST['pass'] != '')) {
-		$user = $_POST['login'];
-		$query = "SELECT * FROM users WHERE `login` = '$user'";
-		$result = mysqli_query($link, $query) or die('Error_result');
-		$test = mysqli_fetch_assoc($result);
+        $stmt = $conn->prepare("SELECT * FROM user WHERE `login` = ?");
+        $stmt->bind_param("s", $_POST['login']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
 
-		if (empty($test)) {
-			$salt_gen = generate_salt();
-			$salt = $salt_gen;
+		if ($result->num_rows === 0) {
+			$salt = generate_salt();
 			$password = md5($salt.$_POST['pass']);
 			$user = $_POST['login'];
-			$query_insert = "INSERT INTO users SET `login` = '$user', `password` = '$password', salt = '$salt'";
-			$result_insert = mysqli_query($link, $query_insert) or die('Error_result_insert');
-			echo "Регистрация прошла успешно<br>";
-			echo "Ваш статус - ";
-			$query_check_status = "SELECT `users_status`.`status` 
-					FROM `users`, `users_status`
-					WHERE `users`.`login` = '$user'
-					AND `users`.`user_status` = `users_status`.`id_status`";
-			$result_status = mysqli_query($link, $query_check_status) or die('Error_result_status');
-			$text = mysqli_fetch_array($result_status);
-			echo $text[0];
+			$query_insert = $conn->prepare("INSERT INTO user SET `login` = ?, `password` = ?, salt = ?");
+            $query_insert->bind_param("sss", $user, $password, $salt);
+            $query_insert->execute();
+            $query_insert->close();
+
+			echo "Регистрация прошла успешно.<br>";
+
+			$query_check_status = $conn->prepare("SELECT `user_status`.`status` 
+					FROM `user`, `user_status`
+					WHERE `user`.`login` = ?
+					AND `user`.`status_id` = `user_status`.`status_id`");
+            $query_check_status->bind_param("s", $user);
+            $query_check_status->execute();
+            $result_status = $query_check_status->get_result();
+            $row = $result_status->fetch_assoc();
+            $status = $row['status'];
+            $query_check_status->close();
+
+            echo "Ваш статус - '{$status}'<br>";
+            echo "<a href='cabinet.php'>Перейти в кабинет</a><br>";
+            echo "<a href='index.php'>Выйти</a>";
+
 		} else {
-			echo "Такой логин уже есть";
-			header("refresh: 1; url=index.php");
+			echo "<script type='text/javascript'>
+                    window.alert('Пользователь с таким логином уже существует')
+                  </script>";
+			header("refresh: 0; url=index.php");
 		}
 	} else {
 		header('Location: index.php');

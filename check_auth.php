@@ -15,23 +15,27 @@
 
 
 	if (($_POST['login'] != '') && ($_POST['pass'] != '')) {
-		$user = $_POST['login'];
-		$query_salt = "SELECT * FROM users WHERE login = '$user'";
-		$result_salt = mysqli_query($link, $query_salt) or die('Error_result_salt');
-		$user_data = mysqli_fetch_assoc($result_salt);
-		$user_salt_true = $user_data['salt'];
-		$user_password_true = $user_data['password'];
+        $query_salt = $conn->prepare("SELECT * FROM user WHERE login = ?");
+        $query_salt->bind_param("s", $_POST['login']);
+        $query_salt->execute();
+        $data = $query_salt->get_result();
+        $user_data = $data->fetch_assoc();
+        $user_salt_true = $user_data['salt'];
+        $user_password_true = $user_data['password'];
+        $query_salt->close();
 
 		if (!empty($user_data)) { 			
 			$password_input = md5($user_salt_true.$_POST['pass']);
 			if ($password_input == $user_password_true) {
 				$_SESSION['auth'] = TRUE;
-				$_SESSION['id'] = $user_data['id'];
-				$_SESSION['status'] = $user_data['user_status'];
-				header('Location: content.php');
+				$_SESSION['id'] = $user_data['user_id'];
+				$_SESSION['status'] = $user_data['status_id'];
+				header('Location: cabinet.php');
 			} else {
-				echo "Пароль не верный";
-				header("refresh: 1; url=index.php");
+                echo "<script type='text/javascript'>
+                    window.alert('Логин или пароль не верный')
+                  </script>";
+                header("refresh: 0; url=index.php");
 			}		
 		}
 	} else {
