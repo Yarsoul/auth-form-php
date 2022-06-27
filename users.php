@@ -1,4 +1,5 @@
 <?php
+
 include "connection.php";
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -31,8 +32,6 @@ if ($_SESSION['auth'] && (($_SESSION['status'] == 1) || ($_SESSION['status'] == 
     }
 }
 
-
-
 $query = "SELECT `user`.`login`, `user_status`.`status`, `user`.`user_id` 
 				FROM `user`, `user_status` 
 				WHERE `user`.`status_id` = `user_status`.`status_id`";
@@ -53,33 +52,8 @@ if ($_SESSION['auth'] && ($_SESSION['status'] == 1)) {
 
 echo "<br><button onclick='exit()'>Выйти</button>";
 
-
-echo "<script>
-        async function myFunc(value, user_id) {
-            document.getElementById('my_link_'+user_id).href = '?update=' + [value, user_id];
-        }
-        
-        function exit() {
-                
-            window.location.href = 'index.php';
-        }
-        
-        let title = document.getElementById('title');
-        title.style.textAlign = 'center';
-        
-        let columns = document.getElementsByClassName('column');
-        for (let element of columns) {
-          element.style.textAlign = 'center';
-        }
-        
-        let table = document.getElementById('table');
-        table.style.border = '1px solid black';
-        table.style.borderCollapse = 'collapse';
-        
-        let elementsTd = document.getElementsByTagName('td');
-        for (let element of elementsTd) {
-          element.style.border = '1px solid black';
-        }
-      </script>";
+echo "<script src='scripts/tableCssRedaction.js'></script>";
+echo "<script src='scripts/updateStatus.js'></script>";
+echo "<script src='scripts/exit.js'></script>";
 
 ?>
